@@ -10,7 +10,7 @@ const TaskSchema = new Schema(
       dueDate: { type: Date, required: true },
       status: {
          type: String,
-         enum: ["Pending", "Completed"],
+         enum: ["Inprogress", "Pending", "Completed"],
          default: "Pending",
       },
       priority: {

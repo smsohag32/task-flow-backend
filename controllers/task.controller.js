@@ -3,29 +3,31 @@ import addTaskToGoogleCalendar from "./calendar.controller.js";
 
 export const createTask = async (req, res) => {
    try {
-      const { title, description, dueDate, priority } = req.body;
+      const { title, description, dueDate, status, priority } = req.body;
       const userId = req.user.id;
 
       if (!title || !dueDate) {
          return res.status(400).json({ message: "Title and Due Date are required." });
       }
 
-      const newTask = new Task({ userId, title, description, dueDate, priority });
+      const newTask = new Task({ userId, title, description, dueDate, status, priority });
       await newTask.save();
 
       const taskForGoogleCalendar = {
          title,
          description,
          dueDate,
+         status,
+         priority,
       };
 
-      try {
-         await addTaskToGoogleCalendar(req.session.tokens, taskForGoogleCalendar);
-         res.status(200).send(`Task synced with Google Calendar: ${newTask.title}`);
-      } catch (googleError) {
-         console.error("Error syncing with Google Calendar:", googleError);
-         res.status(500).send("Task created, but failed to sync with Google Calendar.");
-      }
+      // try {
+      //    await addTaskToGoogleCalendar(req.session.tokens, taskForGoogleCalendar);
+      //    res.status(200).send(`Task synced with Google Calendar: ${newTask.title}`);
+      // } catch (googleError) {
+      //    console.error("Error syncing with Google Calendar:", googleError);
+      //    res.status(500).send("Task created, but failed to sync with Google Calendar.");
+      // }
 
       res.status(201).json({ message: "Task created successfully", task: newTask });
    } catch (error) {
@@ -88,7 +90,7 @@ export const changeTaskStatus = async (req, res) => {
          return res.status(404).json({ message: "Task not found" });
       }
 
-      if (!["Pending", "Completed"].includes(status)) {
+      if (!["Inprogress", "Pending", "Completed"].includes(status)) {
          return res.status(400).json({ message: "Invalid status value" });
       }
 
@@ -103,8 +105,9 @@ export const changeTaskStatus = async (req, res) => {
 
 export const deleteTask = async (req, res) => {
    try {
-      const task = await Task.findById(req.params.id);
-
+      const id = req.params.id;
+      const task = await Task.findById(id);
+      console.log(task);
       if (!task || task.userId.toString() !== req.user.id) {
          return res.status(404).json({ message: "Task not found" });
       }
